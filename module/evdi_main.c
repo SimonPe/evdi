@@ -82,7 +82,7 @@ int evdi_driver_unload(struct drm_device *dev)
 
 #if KERNEL_VERSION(4, 7, 0) > LINUX_VERSION_CODE
 	drm_connector_unplug_all(dev);
-#else
+#elif KERNEL_VERSION(4, 8, 0) > LINUX_VERSION_CODE
 	drm_connector_unregister_all(dev);
 #endif
 
@@ -106,4 +106,3 @@ void evdi_driver_preclose(struct drm_device *drm_dev, struct drm_file *file)
 	if (evdi)
 		evdi_painter_close(evdi, file);
 }
-
