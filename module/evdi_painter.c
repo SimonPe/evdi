@@ -188,18 +188,29 @@ static void evdi_painter_send_event(struct drm_file *drm_filp,
 	wake_up_interruptible(&drm_filp->event_wait);
 }
 
+static struct evdi_event_pending *evdi_event_pending_new(struct evdi_painter *painter, uint32_t type)
+{
+	struct evdi_event_pending *event;
+
+	event = kzalloc(sizeof(*event), GFP_KERNEL);
+
+	event->base.type = type;
+	event->base.length = sizeof(*event);
+
+	event->pending.event = &event->base;
+	event->pending.file_priv = painter->drm_filp;
+	event->pending.destroy = (void (*)(struct drm_pending_event *))kfree;
+
+	return event;
+}
+
 static void evdi_painter_send_update_ready(struct evdi_painter *painter)
 {
 	struct evdi_event_pending *event;
 
 	if (painter->drm_filp) {
-		event = kzalloc(sizeof(*event), GFP_KERNEL);
-		event->base.type = DRM_EVDI_EVENT_UPDATE_READY;
-		event->base.length = sizeof(*event);
-		event->pending.event = &event->base;
-		event->pending.file_priv = painter->drm_filp;
-		event->pending.destroy =
-		    (void (*)(struct drm_pending_event *))kfree;
+		event = evdi_event_pending_new(painter,
+			DRM_EVDI_EVENT_UPDATE_READY);
 		evdi_painter_send_event(painter->drm_filp, &event->pending.link);
 	} else {
 		EVDI_WARN("Painter is not connected!");
@@ -211,14 +222,9 @@ static void evdi_painter_send_dpms(struct evdi_painter *painter, int mode)
 	struct evdi_event_pending *event;
 
 	if (painter->drm_filp) {
-		event = kzalloc(sizeof(*event), GFP_KERNEL);
-		event->base.type = DRM_EVDI_EVENT_DPMS;
-		event->base.length = sizeof(*event);
+		event = evdi_event_pending_new(painter,
+			DRM_EVDI_EVENT_DPMS);
 		event->dpms.mode = mode;
-		event->pending.event = &event->base;
-		event->pending.file_priv = painter->drm_filp;
-		event->pending.destroy =
-		    (void (*)(struct drm_pending_event *))kfree;
 		evdi_painter_send_event(painter->drm_filp, &event->pending.link);
 	} else {
 		EVDI_WARN("Painter is not connected!");
@@ -231,14 +237,9 @@ static void evdi_painter_send_crtc_state(struct evdi_painter *painter,
 	struct evdi_event_pending *event;
 
 	if (painter->drm_filp) {
-		event = kzalloc(sizeof(*event), GFP_KERNEL);
-		event->base.type = DRM_EVDI_EVENT_CRTC_STATE;
-		event->base.length = sizeof(*event);
+		event = evdi_event_pending_new(painter,
+			DRM_EVDI_EVENT_CRTC_STATE);
 		event->crtc_state.state = state;
-		event->pending.event = &event->base;
-		event->pending.file_priv = painter->drm_filp;
-		event->pending.destroy =
-		    (void (*)(struct drm_pending_event *))kfree;
 		evdi_painter_send_event(painter->drm_filp, &event->pending.link);
 	} else {
 		 EVDI_WARN("Painter is not connected!");
@@ -268,9 +269,8 @@ static void evdi_painter_send_mode_changed(struct evdi_painter *painter,
 	struct evdi_event_pending *event;
 
 	if (painter->drm_filp) {
-		event = kzalloc(sizeof(*event), GFP_KERNEL);
-		event->base.type = DRM_EVDI_EVENT_MODE_CHANGED;
-		event->base.length = sizeof(*event);
+		event = evdi_event_pending_new(painter,
+			DRM_EVDI_EVENT_MODE_CHANGED);
 
 		event->mode_changed.hdisplay = painter->current_mode.hdisplay;
 		event->mode_changed.vdisplay = painter->current_mode.vdisplay;
@@ -279,10 +279,6 @@ static void evdi_painter_send_mode_changed(struct evdi_painter *painter,
 		event->mode_changed.bits_per_pixel = bits_per_pixel;
 		event->mode_changed.pixel_format = pixel_format;
 
-		event->pending.event = &event->base;
-		event->pending.file_priv = painter->drm_filp;
-		event->pending.destroy =
-		    (void (*)(struct drm_pending_event *))kfree;
 		evdi_painter_send_event(painter->drm_filp, &event->pending.link);
 	} else {
 		 EVDI_WARN("Painter is not connected!");
