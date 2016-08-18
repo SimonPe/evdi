@@ -199,7 +199,9 @@ static struct evdi_event_pending *evdi_event_pending_new(struct evdi_painter *pa
 
 	event->pending.event = &event->base;
 	event->pending.file_priv = painter->drm_filp;
+#if KERNEL_VERSION(4, 8, 0) > LINUX_VERSION_CODE
 	event->pending.destroy = (void (*)(struct drm_pending_event *))kfree;
+#endif
 
 	return event;
 }
