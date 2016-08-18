@@ -16,16 +16,13 @@
 #define DRM_EVDI_EVENT_CRTC_STATE    0x80000003
 
 struct drm_evdi_event_update_ready {
-	struct drm_event base;
 };
 
 struct drm_evdi_event_dpms {
-	struct drm_event base;
 	int32_t mode;
 };
 
 struct drm_evdi_event_mode_changed {
-	struct drm_event base;
 	int32_t hdisplay;
 	int32_t vdisplay;
 	int32_t vrefresh;
@@ -34,7 +31,6 @@ struct drm_evdi_event_mode_changed {
 };
 
 struct drm_evdi_event_crtc_state {
-	struct drm_event base;
 	int32_t state;
 };
 
@@ -82,4 +78,3 @@ struct drm_evdi_grabpix {
 	DRM_EVDI_GRABPIX, struct drm_evdi_grabpix)
 
 #endif /* __EVDI_UAPI_DRM_H__ */
-
